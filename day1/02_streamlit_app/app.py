@@ -26,24 +26,61 @@ data.ensure_initial_data()
 # LLMモデルのロード（キャッシュを利用）
 # モデルをキャッシュして再利用
 @st.cache_resource
+# def load_model():
+#     """LLMモデルをロードする"""
+#     try:
+#         device = "cuda" if torch.cuda.is_available() else "cpu"
+#         st.info(f"Using device: {device}") # 使用デバイスを表示
+#         pipe = pipeline(
+#             "text-generation",
+#             model=MODEL_NAME,
+#             model_kwargs={"torch_dtype": torch.bfloat16},
+#             device=device
+#         )
+#         st.success(f"モデル '{MODEL_NAME}' の読み込みに成功しました。")
+#         return pipe
+#     except Exception as e:
+#         st.error(f"モデル '{MODEL_NAME}' の読み込みに失敗しました: {e}")
+#         st.error("GPUメモリ不足の可能性があります。不要なプロセスを終了するか、より小さいモデルの使用を検討してください。")
+#         return None
+# pipe = llm.load_model()
+
 def load_model():
-    """LLMモデルをロードする"""
+    """LLMモデルをロードし、キャッシュする"""
     try:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        # デバイス選択の改善 (CUDA > MPS > CPU)
+        if torch.cuda.is_available():
+            device = "cuda"
+        elif torch.backends.mps.is_available():
+            device = "mps"
+        else:
+            device = "cpu"
+
         st.info(f"Using device: {device}") # 使用デバイスを表示
-        pipe = pipeline(
-            "text-generation",
-            model=MODEL_NAME,
-            model_kwargs={"torch_dtype": torch.bfloat16},
-            device=device
-        )
+
+        # モデルロード中のスピナー表示
+        with st.spinner(f"モデル '{MODEL_NAME}' をロード中 ({device})..."):
+            pipe = pipeline(
+                "text-generation",
+                model=MODEL_NAME,
+                model_kwargs={"torch_dtype": torch.bfloat16},
+                device=device,
+                # token=HfFolder.get_token() # 必要に応じてトークンを追加
+            )
         st.success(f"モデル '{MODEL_NAME}' の読み込みに成功しました。")
         return pipe
-    except Exception as e:
-        st.error(f"モデル '{MODEL_NAME}' の読み込みに失敗しました: {e}")
-        st.error("GPUメモリ不足の可能性があります。不要なプロセスを終了するか、より小さいモデルの使用を検討してください。")
+    except ImportError as e:
+        st.error(f"必要なライブラリが見つかりません: {e}")
+        st.error("transformers, torch, accelerate などが正しくインストールされているか確認してください。")
         return None
-pipe = llm.load_model()
+    except Exception as e:
+        st.error(f"モデル '{MODEL_NAME}' の読み込み中にエラーが発生しました: {e}")
+        st.error("GPUメモリ不足、モデル名の誤り、ネットワーク接続の問題などが考えられます。")
+        return None
+
+# --- モデルのロード実行 ---
+# llm.load_model() ではなく、上で定義した関数を呼び出す
+pipe = load_model()
 
 # --- Streamlit アプリケーション ---
 st.title("🤖 Gemma 2 Chatbot with Feedback")
