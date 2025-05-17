@@ -104,6 +104,7 @@ def train_model(sample_data, preprocessor):
 
 def test_model_exists():
     """モデルファイルが存在するか確認"""
+    # このテストはCIで実行される
     if not os.path.exists(MODEL_PATH):
         pytest.skip("モデルファイルが存在しないためスキップします")
     assert os.path.exists(MODEL_PATH), "モデルファイルが存在しません"
