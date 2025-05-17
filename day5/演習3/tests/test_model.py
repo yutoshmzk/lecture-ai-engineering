@@ -16,7 +16,7 @@ from sklearn.pipeline import Pipeline
 DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/Titanic.csv")
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "../models")
 MODEL_PATH = os.path.join(MODEL_DIR, "titanic_model.pkl")
-BASELINE_ACCURACY = 0.75 # この値を過去バージョンの最低保証精度とする
+BASELINE_ACCURACY = 0.75  # この値を過去バージョンの最低保証精度とする
 
 
 @pytest.fixture
@@ -170,9 +170,8 @@ def test_model_reproducibility(sample_data, preprocessor):
     predictions1 = model1.predict(X_test)
     predictions2 = model2.predict(X_test)
 
-    assert np.array_equal(
-        predictions1, predictions2
-    ), "モデルの予測結果に再現性がありません"
+    assert np.array_equal(predictions1, predictions2), "モデルの予測結果に再現性がありません"
+
 
 # 新しいテスト: 過去バージョンとの性能比較（ベースライン精度との比較）
 def test_model_performance_regression(train_model):
@@ -184,5 +183,6 @@ def test_model_performance_regression(train_model):
     current_accuracy = accuracy_score(y_test, y_pred)
 
     print(f"現在のモデル精度: {current_accuracy:.4f}, ベースライン精度: {BASELINE_ACCURACY:.4f}")
-    assert current_accuracy >= BASELINE_ACCURACY, \
-        f"モデルの精度 ({current_accuracy:.4f}) がベースライン精度 ({BASELINE_ACCURACY:.4f}) を下回っており、性能が劣化した可能性があります。"
+    assert (
+        current_accuracy >= BASELINE_ACCURACY
+    ), f"モデルの精度 ({current_accuracy:.4f}) がベースライン精度 ({BASELINE_ACCURACY:.4f}) を下回っており、性能が劣化した可能性があります。"
